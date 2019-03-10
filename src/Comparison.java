@@ -2,12 +2,11 @@ import graph.Graph;
 import graph.Node;
 
 import java.io.*;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Comparison {
+    Set<int[]> set = new HashSet<>();
+
     public static void main(String[] args) {
         Comparison comparison = new Comparison();
         int[][] D = comparison.computeDistanceFromFile();
@@ -116,5 +115,188 @@ public class Comparison {
 
         return D;
     }
+
+    public List<Integer> computeGreedy(int[][] D, LinkedList<Integer> r, LinkedList<Integer> C0) {
+        List<Integer> answer = new LinkedList<>();
+        for (int request :
+                r) {
+            int nearestServer = extractMin(D, request, C0);
+            answer.add(nearestServer);
+        }
+        return answer;
+    }
+
+    public int extractMin(int[][] D, int r, LinkedList<Integer> C0) {
+        int Min = 32766;
+        for (int pos :
+                C0) {
+            if (D[r - 1][pos - 1] < Min) {
+                Min = pos;
+            }
+        }
+        return Min;
+    }
+
+    public List<Integer> computeOPT(int[][] D, LinkedList<Integer> r, LinkedList<Integer> C0) {
+        return null;
+    }
+
+    public Map<Integer, Map<String, Integer>> WFA(int[][] D, LinkedList<Integer> r, LinkedList<Integer> C0) {
+        int[] a = new int[D.length];
+        for (int i = 0; i < D.length; i++) {
+            a[i] = i + 1;
+        }
+        permutation(a, 0, 0, C0.size(), C0.size(), a.length, C0.size());
+        /*
+            compute distance between initial vertex set and every possible set.
+         */
+        Map<String, Integer> dist = new HashMap<>();
+        for (int[] vertices :
+                set) {
+            int distance = computeDis(vertices, C0, D);
+            dist.put(toString(vertices), distance);
+        }
+        /*
+            compute the matrix of work funciton algo
+         */
+        Map<Integer, Map<String, Integer>> matrix = new HashMap<>();
+        matrix.put(0, dist);
+        dist = new HashMap<>();
+        int last = 0;
+        for (int request :
+                r) {
+            for (int[] combo :
+                    set) {
+                dist.put(toString(combo), workFunciton(matrix.get(last), request, combo, D));
+            }
+            matrix.put(request, dist);
+            last = request;
+            dist = new HashMap<>();
+        }
+        return matrix;
+    }
+
+    public int workFunciton(Map<String, Integer> matrix, int r, int[] combo, int[][] D) {
+        Combo c = new Combo(combo);
+        Combo temp = new Combo(combo);
+        int min = 32766;
+        if (c.contains(r)) {
+            min = matrix.get(c.toString());
+            for (int i = 0; i < combo.length; i++) {
+                if (combo[i] == r) continue;
+                temp = new Combo(combo);
+                for (int j = 0; j < D.length; j++) {
+                    if (c.contains(j + 1)) {
+                        continue;
+                    } else {
+                        temp.substitute(i, j + 1);
+                        int dis = matrix.get(temp.toString()) + D[combo[i] - 1][j];
+                        if (min > dis) {
+                            min = dis;
+                        }
+                    }
+                }
+            }
+        } else {
+            for (int i = 0; i < combo.length; i++) {
+                temp.substitute(i, r);
+                int dis = matrix.get(temp.toString()) + D[combo[i] - 1][r - 1];
+                if (min > dis) min = dis;
+            }
+        }
+        return min;
+    }
+
+    public String toString(int[] arr) {
+        StringBuilder builder = new StringBuilder();
+        for (int a :
+                arr) {
+            builder.append(a);
+        }
+        return builder.toString();
+    }
+
+    public int computeDis(int[] vertices, LinkedList<Integer> C0, int[][] D) {
+        Set<Integer> s = new HashSet<>();
+        Set<Integer> v = new HashSet<>();
+        HashMap<Integer, List<Map.Entry<Integer, Integer>>> dist = new HashMap<>();
+        for (int num :
+                C0) {
+            s.add(num);
+        }
+        for (int num :
+                vertices) {
+            if (C0.contains(num)) {
+                s.remove(num);
+            } else {
+                v.add(num);
+            }
+        }
+        /*
+            Compute the shortest distance.
+         */
+        for (int vetex :
+                v) {
+            List<Map.Entry<Integer, Integer>> list = buildSortedList(C0, D[vetex]);
+            updateMap(dist, list);
+        }
+        int sum = 0;
+        for (List<Map.Entry<Integer, Integer>> list :
+                dist.values()) {
+            sum += list.get(0).getValue();
+        }
+        return sum;
+    }
+
+    public void updateMap(HashMap<Integer, List<Map.Entry<Integer, Integer>>> dist, List<Map.Entry<Integer, Integer>> list) {
+        int pos = list.get(0).getKey();
+        if (dist.containsKey(pos)) {
+            if (dist.get(pos).get(0).getValue() > list.get(0).getValue()) {
+                List<Map.Entry<Integer, Integer>> temp = dist.get(pos);
+                temp.remove(0);
+                dist.put(pos, list);
+                updateMap(dist, temp);
+            } else {
+                list.remove(0);
+                updateMap(dist, list);
+            }
+        } else {
+            dist.put(list.get(0).getKey(), list);
+        }
+    }
+
+    public List<Map.Entry<Integer, Integer>> buildSortedList(LinkedList<Integer> C0, int[] D) {
+        List<Map.Entry<Integer, Integer>> list = new LinkedList<>();
+        Map<Integer, Integer> map = new HashMap<>();
+        for (int i :
+                C0) {
+            map.put(i - 1, D[i - 1]);
+        }
+        list.addAll(map.entrySet());
+        Collections.sort(list, (mp1, mp2) -> mp1.getValue() > mp2.getValue() ? 1 : -1);
+        return list;
+    }
+
+    public void permutation(int[] a, int begin0, int begin, int mid1, int mid2, int end, int selectNum) {
+
+        int[] temp = new int[selectNum];
+        System.arraycopy(a, begin0, temp, 0, selectNum);
+        set.add(temp);
+
+        for (int t = begin; t < mid1; t++) {
+            for (int j = mid2; j < end; j++) {
+                int temp0 = a[t];
+                a[t] = a[j];
+                a[j] = temp0;
+
+                permutation(a, begin0, t + 1, mid1, j + 1, end, selectNum);
+
+                a[j] = a[t];
+                a[t] = temp0;
+            }
+        }
+
+    }
+
 
 }
