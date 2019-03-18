@@ -4,7 +4,8 @@ public class Combo {
     private int[] combo;
 
     public Combo(int[] combo) {
-        this.combo = combo;
+        this. combo = new int[combo.length];
+        System.arraycopy(combo, 0, this.combo, 0, combo.length);
     }
 
     public boolean contains(int r) {

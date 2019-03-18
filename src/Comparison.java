@@ -10,6 +10,11 @@ public class Comparison {
     public static void main(String[] args) {
         Comparison comparison = new Comparison();
         int[][] D = comparison.computeDistanceFromFile();
+        Integer[] a = new Integer[] {3, 4, 2, 3, 1};
+        List<Integer> r = Arrays.asList(a);
+        a = new Integer[] {1, 2};
+        List<Integer> C0 = Arrays.asList(a);
+        Map<Integer, Map<String, Integer>> matrix = comparison.WFA(D, r, C0);
         for (int i = 0; i < D.length; i++) {
             for (int j = 0; j < D[i].length; j++) {
                 System.out.print(D[i][j] + " ");
@@ -116,7 +121,7 @@ public class Comparison {
         return D;
     }
 
-    public List<Integer> computeGreedy(int[][] D, LinkedList<Integer> r, LinkedList<Integer> C0) {
+    public List<Integer> computeGreedy(int[][] D, List<Integer> r, List<Integer> C0) {
         List<Integer> answer = new LinkedList<>();
         for (int request :
                 r) {
@@ -126,7 +131,7 @@ public class Comparison {
         return answer;
     }
 
-    public int extractMin(int[][] D, int r, LinkedList<Integer> C0) {
+    public int extractMin(int[][] D, int r, List<Integer> C0) {
         int Min = 32766;
         for (int pos :
                 C0) {
@@ -141,7 +146,7 @@ public class Comparison {
         return null;
     }
 
-    public Map<Integer, Map<String, Integer>> WFA(int[][] D, LinkedList<Integer> r, LinkedList<Integer> C0) {
+    public Map<Integer, Map<String, Integer>> WFA(int[][] D, List<Integer> r, List<Integer> C0) {
         int[] a = new int[D.length];
         for (int i = 0; i < D.length; i++) {
             a[i] = i + 1;
@@ -190,7 +195,11 @@ public class Comparison {
                         continue;
                     } else {
                         temp.substitute(i, j + 1);
-                        int dis = matrix.get(temp.toString()) + D[combo[i] - 1][j];
+                        int w = roughlyGet(matrix, temp.toString());
+                        int dis = 0;
+                        if (w != -1) {
+                            dis = w + D[combo[i] - 1][j];
+                        }
                         if (min > dis) {
                             min = dis;
                         }
@@ -200,11 +209,37 @@ public class Comparison {
         } else {
             for (int i = 0; i < combo.length; i++) {
                 temp.substitute(i, r);
-                int dis = matrix.get(temp.toString()) + D[combo[i] - 1][r - 1];
+                int w = roughlyGet(matrix, temp.toString());
+                int dis = 0;
+                if (w != -1) {
+                    dis = w + D[combo[i] - 1][r - 1];
+                }
                 if (min > dis) min = dis;
+                temp = new Combo(combo);
             }
         }
         return min;
+    }
+
+    /*
+        Cus there are some key like "34" or "43". They are same clique.
+        But we only store one of the combinations into matrix. it's allowed to get both of the combinations from matrix though.
+     */
+    public int roughlyGet(Map<String, Integer> map, String s){
+        for (Map.Entry<String, Integer> entry:
+                map.entrySet()){
+            Set<String> key = new HashSet<String>(Arrays.asList(entry.getKey().split("")));
+            boolean flag = true;
+            for (String str :
+                    s.split("")) {
+                if (!key.contains(str)){
+                    flag =false;
+                    break;
+                }
+            }
+            if (flag) return entry.getValue();
+        }
+        return -1;
     }
 
     public String toString(int[] arr) {
@@ -216,9 +251,12 @@ public class Comparison {
         return builder.toString();
     }
 
-    public int computeDis(int[] vertices, LinkedList<Integer> C0, int[][] D) {
+    public int computeDis(int[] vertices, List<Integer> C0, int[][] D) {
         Set<Integer> s = new HashSet<>();
         Set<Integer> v = new HashSet<>();
+        /*
+            <origin server name, sorted list<origin server name, dist>>
+         */
         HashMap<Integer, List<Map.Entry<Integer, Integer>>> dist = new HashMap<>();
         for (int num :
                 C0) {
@@ -237,7 +275,10 @@ public class Comparison {
          */
         for (int vetex :
                 v) {
-            List<Map.Entry<Integer, Integer>> list = buildSortedList(C0, D[vetex]);
+            /*
+                <position that origin server exchange, distance>
+             */
+            List<Map.Entry<Integer, Integer>> list = buildSortedList(s, D[vetex-1]);
             updateMap(dist, list);
         }
         int sum = 0;
@@ -265,12 +306,12 @@ public class Comparison {
         }
     }
 
-    public List<Map.Entry<Integer, Integer>> buildSortedList(LinkedList<Integer> C0, int[] D) {
+    public List<Map.Entry<Integer, Integer>> buildSortedList(Set<Integer> C0, int[] D) {
         List<Map.Entry<Integer, Integer>> list = new LinkedList<>();
         Map<Integer, Integer> map = new HashMap<>();
         for (int i :
                 C0) {
-            map.put(i - 1, D[i - 1]);
+            map.put(i - 1, D[i - 1]);//real coordination
         }
         list.addAll(map.entrySet());
         Collections.sort(list, (mp1, mp2) -> mp1.getValue() > mp2.getValue() ? 1 : -1);
@@ -295,8 +336,6 @@ public class Comparison {
                 a[t] = temp0;
             }
         }
-
     }
-
 
 }
