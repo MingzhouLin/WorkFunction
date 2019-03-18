@@ -14,7 +14,7 @@ public class Comparison {
         List<Integer> r = Arrays.asList(a);
         a = new Integer[] {1, 2};
         List<Integer> C0 = Arrays.asList(a);
-        Map<Integer, Map<String, Integer>> matrix = comparison.WFA(D, r, C0);
+        List<MyEntry<Integer, Map<String, Integer>>> matrix = comparison.WFA(D, r, C0);
         for (int i = 0; i < D.length; i++) {
             for (int j = 0; j < D[i].length; j++) {
                 System.out.print(D[i][j] + " ");
@@ -96,13 +96,15 @@ public class Comparison {
 
     public int extractMin(Set<Integer> ids, int[] weights) {
         int min = 32766;
+        int min_id = -1;
         for (int id :
                 ids) {
             if (weights[id - 1] < min) {
-                min = id;
+                min = weights[id-1];
+                min_id = id;
             }
         }
-        return min;
+        return min_id;
     }
 
     public int[][] computeDistanceFromFile() {
@@ -146,7 +148,7 @@ public class Comparison {
         return null;
     }
 
-    public Map<Integer, Map<String, Integer>> WFA(int[][] D, List<Integer> r, List<Integer> C0) {
+    public List<MyEntry<Integer, Map<String, Integer>>> WFA(int[][] D, List<Integer> r, List<Integer> C0) {
         int[] a = new int[D.length];
         for (int i = 0; i < D.length; i++) {
             a[i] = i + 1;
@@ -164,18 +166,19 @@ public class Comparison {
         /*
             compute the matrix of work funciton algo
          */
-        Map<Integer, Map<String, Integer>> matrix = new HashMap<>();
-        matrix.put(0, dist);
+        List<MyEntry<Integer, Map<String, Integer>>> matrix = new LinkedList<>();
+        MyEntry<Integer, Map<String, Integer>> entry = new MyEntry<>(0, dist);
+        matrix.add(entry);
         dist = new HashMap<>();
         int last = 0;
         for (int request :
                 r) {
             for (int[] combo :
                     set) {
-                dist.put(toString(combo), workFunciton(matrix.get(last), request, combo, D));
+                dist.put(toString(combo), workFunciton( ((LinkedList<MyEntry<Integer, Map<String, Integer>>>) matrix).getLast().getValue(), request, combo, D));
             }
-            matrix.put(request, dist);
-            last = request;
+            entry = new MyEntry<>(request, dist);
+            matrix.add(entry);
             dist = new HashMap<>();
         }
         return matrix;
