@@ -25,26 +25,8 @@ public class Comparison {
             }
             System.out.println();
         }
-
-        //wfa
-//        comparison.WFA2(D, r, C0);
-//        int costOfWFA = 0 ;
-//        for (MyEntry me : wfa){
-//            costOfWFA = costOfWFA + (int)me.getValue();
-//        }
-//        System.out.println("WFA result: "+costOfWFA);
         //opt
         List<MyEntry<Integer, Map<String, Integer>>> opt = comparison.OPT(D, r, C0);
-
-        Stack<String> wfa_stack = comparison.WFA2(opt,D);
-        int costOfWFA = comparison.computeTotalCost(wfa_stack,D);
-        System.out.println("WFA result: "+costOfWFA);
-
-
-
-
-
-
         MyEntry lastRound = opt.get(opt.size()-1);
         Map<String, Integer> map = (Map)lastRound.getValue();
         int costOfOPT = Integer.MAX_VALUE;
@@ -54,6 +36,17 @@ public class Comparison {
 
         }
         System.out.println("OPT result: "+costOfOPT);
+
+        Stack<String> wfa_stack = comparison.WFA(opt,D);
+        int costOfWFA = comparison.computeTotalCost(wfa_stack,D);
+        System.out.println("WFA result: "+costOfWFA);
+
+
+
+
+
+
+
         //greedy
         List<int[]> greedy = comparison.Greedy(D,r,C0);
         int costOfGreedy =0;
@@ -336,7 +329,7 @@ public class Comparison {
         return min;
     }
 
-    public Stack<String> WFA2 (List<MyEntry<Integer, Map<String, Integer>>> matrix, int[][] D){
+    public Stack<String> WFA (List<MyEntry<Integer, Map<String, Integer>>> matrix, int[][] D){
 
         String last_conf_1 ="";
 
@@ -478,99 +471,6 @@ public class Comparison {
 
 
 
-
-    }
-
-
-    public List<MyEntry> WFA(int[][] D, List<Integer> r, List<Integer> C0) {
-        int[] a = new int[D.length];
-        for (int i = 0; i < D.length; i++) {
-            a[i] = i + 1;
-        }
-        permutation(a, 0, 0, C0.size(), C0.size(), a.length, C0.size());
-        /*
-            compute distance between initial vertex set and every possible set.
-         */
-        Map<String, Integer> dist = new HashMap<>();
-
-
-        List<MyEntry> res = new ArrayList<>();
-
-
-
-
-
-        for (int[] vertices :
-                set) {
-//            fullSort(vertices, 0, vertices.length - 1);
-            int distance = computeDis(vertices, C0, D);
-            Arrays.sort(vertices);
-            dist.put(toString(vertices), distance);
-        }
-        int minDis = Integer.MAX_VALUE;
-
-        for(int dis :dist.values()){
-            if(dis<minDis)
-                minDis = dis;
-
-        }
-        int[] lastConf = new int[C0.size()];
-        String lastConfStr = "";
-        for( String choice:dist.keySet()){
-            if(dist.get(choice).equals(minDis)){
-                lastConfStr = choice;
-                break;
-            }
-        }
-
-
-
-        lastConf = toArray(lastConfStr);
-        res.add(new MyEntry(lastConfStr,minDis));
-        List<Integer> lastConfList = new ArrayList<>();
-        for(int i=0;i<lastConf.length;i++){
-            lastConfList.add(lastConf[i]);
-        }
-
-
-
-        for(Integer req:r){
-            dist.clear();
-            Set<int[]> subSet = permutation1(a, 0, 0, lastConf.length, lastConf.length, a.length, lastConf.length,req);
-            for (int[] vertices :
-                    subSet) {
-//            fullSort(vertices, 0, vertices.length - 1);
-                int distance = computeDis(vertices, lastConfList, D);
-                Arrays.sort(vertices);
-                dist.put(toString(vertices), distance);
-            }
-            minDis = Integer.MAX_VALUE;
-
-            for(int dis :dist.values()){
-                if(dis<minDis)
-                    minDis = dis;
-
-            }
-            lastConf = new int[lastConf.length];
-            lastConfStr = "";
-            for( String choice:dist.keySet()){
-                if(dist.get(choice).equals(minDis)){
-                    lastConfStr = choice;
-                    break;
-                }
-            }
-            lastConf = toArray(lastConfStr);
-
-            res.add(new MyEntry(lastConfStr,minDis));
-            lastConfList = new ArrayList<>();
-            for(int i=0;i<lastConf.length;i++){
-                lastConfList.add(lastConf[i]);
-            }
-
-        }
-
-
-    return res;
 
     }
 
