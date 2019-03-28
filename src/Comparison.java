@@ -1,7 +1,9 @@
+
 import graph.Graph;
 import graph.Node;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 public class Comparison {
@@ -14,14 +16,120 @@ public class Comparison {
         List<Integer> r = Arrays.asList(a);
         a = new Integer[] {1, 2};
         List<Integer> C0 = Arrays.asList(a);
-        List<MyEntry<Integer, Map<String, Integer>>> matrix = comparison.WFA(D, r, C0);
+        List<MyEntry> wfa = new ArrayList<>();
+
+        System.out.println("Distance matrix:");
         for (int i = 0; i < D.length; i++) {
             for (int j = 0; j < D[i].length; j++) {
                 System.out.print(D[i][j] + " ");
             }
             System.out.println();
         }
+
+        //wfa
+//        comparison.WFA2(D, r, C0);
+//        int costOfWFA = 0 ;
+//        for (MyEntry me : wfa){
+//            costOfWFA = costOfWFA + (int)me.getValue();
+//        }
+//        System.out.println("WFA result: "+costOfWFA);
+        //opt
+        List<MyEntry<Integer, Map<String, Integer>>> opt = comparison.OPT(D, r, C0);
+
+        Stack<String> wfa_stack = comparison.WFA2(opt,D);
+        int costOfWFA = comparison.computeTotalCost(wfa_stack,D);
+        System.out.println("WFA result: "+costOfWFA);
+
+
+
+
+
+
+        MyEntry lastRound = opt.get(opt.size()-1);
+        Map<String, Integer> map = (Map)lastRound.getValue();
+        int costOfOPT = Integer.MAX_VALUE;
+        for(String conf:map.keySet()){
+            if(map.get(conf)<costOfOPT)
+                costOfOPT = map.get(conf);
+
+        }
+        System.out.println("OPT result: "+costOfOPT);
+        //greedy
+        List<int[]> greedy = comparison.Greedy(D,r,C0);
+        int costOfGreedy =0;
+        for(int j=0;j<greedy.size();j++){
+            costOfGreedy = costOfGreedy + greedy.get(j)[1];
+        }
+        System.out.println("Greedy result: "+costOfGreedy);
+
+
+
+
+
+
+
+
     }
+
+    public int[] FindDifferent(String[] array1, String[] array2){
+
+        int[] res = new int[2];
+
+
+
+        Set<String> set1= new HashSet<>();
+        Set<String> set2= new HashSet<>();
+        Set<String> total_set_1= new HashSet<>();
+        Set<String> total_set_2= new HashSet<>();
+
+        for(String s: array1){
+            set1.add(s);
+            total_set_1.add(s);
+            total_set_2.add(s);
+        }
+
+        for(String s: array2){
+            set2.add(s);
+            total_set_1.add(s);
+            total_set_2.add(s);
+        }
+
+        total_set_1.removeAll(set1);
+        total_set_2.removeAll(set2);
+
+        for(String s: total_set_1){
+            res[0] = Integer.parseInt(s);
+        }
+        for(String s: total_set_2){
+            res[1] = Integer.parseInt(s);
+        }
+
+
+
+
+
+        return res;
+    }
+
+
+    public int computeTotalCost (Stack<String> stack, int D[][]){
+        int res = 0;
+
+        String[] array = new String[stack.size()];
+        stack.copyInto(array);
+        for(int i =1;i< array.length;i++){
+            String conf1 = array[i-1];
+            String conf2= array[i];
+            int[] position = FindDifferent(conf1.split(","),conf2.split(","));
+
+            res = res + D[position[0]-1][position[1]-1];
+
+
+        }
+        return  res;
+
+    }
+
 
     public Graph readFileAndProcess() {
         File file = new File("test.txt");
@@ -109,6 +217,8 @@ public class Comparison {
 
     public int[][] computeDistanceFromFile() {
         Graph graph = readFileAndProcess();
+
+
         int[][] D = new int[graph.getMap().size()][graph.getMap().size()];
         for (int i = 0; i < D.length; i++) {
             for (int j = 0; j < D[i].length; j++) {
@@ -120,35 +230,64 @@ public class Comparison {
             D = Dijkstra(graph, D, i);
         }
 
-        return D;
+        int[][] test = {{0,1,2,4},
+                        {1,0,2,3},
+                        {2,2,0,3},
+                        {4,3,3,0}};
+        return test;
+
+//        return D;
     }
 
-    public List<Integer> computeGreedy(int[][] D, List<Integer> r, List<Integer> C0) {
-        List<Integer> answer = new LinkedList<>();
+    public List<int[]> Greedy(int[][] D, List<Integer> r, List<Integer> C0) {
+
+        int[] conf = new int[C0.size()];
+
+        for(int i =0;i<C0.size();i++){
+            conf[i] = C0.get(i);
+        }
+        List<int[]> res = new ArrayList<>();
         for (int request :
                 r) {
-            int nearestServer = extractMin(D, request, C0);
-            answer.add(nearestServer);
+            int[] temp = new int[2];// [0]  position  [1] cost
+            temp =  extractMinConf(D, request, conf);
+
+            for(int j =0; j<conf.length;j++){
+                if(conf[j] == temp[0]){
+                    conf[j] = request;
+                    Arrays.sort(conf);
+                    break;
+                }
+            }
+            res.add(temp);
+
+
+
         }
-        return answer;
+        return res;
     }
 
-    public int extractMin(int[][] D, int r, List<Integer> C0) {
+    public int[] extractMinConf(int[][] D, int r, int[] C0) {
         int Min = 32766;
+        int[] res = {0,0};
         for (int pos :
                 C0) {
             if (D[r - 1][pos - 1] < Min) {
-                Min = pos;
+//                Min = pos;
+                Min = D[r-1][pos-1];
+                res[0] = pos;
+                res[1] = Min;
+
             }
         }
-        return Min;
+        return res;
     }
 
     public List<Integer> computeOPT(int[][] D, LinkedList<Integer> r, LinkedList<Integer> C0) {
         return null;
     }
 
-    public List<MyEntry<Integer, Map<String, Integer>>> WFA(int[][] D, List<Integer> r, List<Integer> C0) {
+    public List<MyEntry<Integer, Map<String, Integer>>> OPT(int[][] D, List<Integer> r, List<Integer> C0) {
         int[] a = new int[D.length];
         for (int i = 0; i < D.length; i++) {
             a[i] = i + 1;
@@ -160,7 +299,9 @@ public class Comparison {
         Map<String, Integer> dist = new HashMap<>();
         for (int[] vertices :
                 set) {
+//            fullSort(vertices, 0, vertices.length - 1);
             int distance = computeDis(vertices, C0, D);
+            Arrays.sort(vertices);
             dist.put(toString(vertices), distance);
         }
         /*
@@ -175,6 +316,7 @@ public class Comparison {
                 r) {
             for (int[] combo :
                     set) {
+                Arrays.sort(combo);
                 dist.put(toString(combo), workFunciton( ((LinkedList<MyEntry<Integer, Map<String, Integer>>>) matrix).getLast().getValue(), request, combo, D));
             }
             entry = new MyEntry<>(request, dist);
@@ -183,6 +325,268 @@ public class Comparison {
         }
         return matrix;
     }
+
+    public int getMin(List<String> list, Map<String, Integer> dist){
+        int min = Integer.MAX_VALUE;
+        for(String s: list){
+            if(dist.get(s)<min){
+                min = dist.get(s);
+            }
+        }
+        return min;
+    }
+
+    public Stack<String> WFA2 (List<MyEntry<Integer, Map<String, Integer>>> matrix, int[][] D){
+
+        String last_conf_1 ="";
+
+        Stack<String> res_stack = new Stack<>();
+        for(int i =0;i<matrix.size();i++){
+
+            int min_cost = Integer.MAX_VALUE;
+            Integer r = matrix.get(i).getKey();
+//            Set<String> last_conf = matrix.get(i).getValue().keySet();
+            if( i == 0){
+                for(String init_conf:matrix.get(0).getValue().keySet()){
+
+                        int cost = matrix.get(0).getValue().get(init_conf);
+                        if(cost <min_cost){
+                            last_conf_1 = init_conf;
+                            min_cost = cost;
+                            if(res_stack.isEmpty()){
+                                res_stack.push(init_conf);
+                            }
+                            else{
+                                res_stack.pop();
+                                res_stack.push(init_conf);
+
+                            }
+
+                        }
+                }
+
+            }
+            else{
+
+                Map<String,Integer> possible_last_confs = computepossiblelastconf(last_conf_1,r.toString(),D);
+                for(String s:possible_last_confs.keySet()){
+                    int cost = possible_last_confs.get(s) + matrix.get(i-1).getValue().get(s);
+                    if(cost <min_cost){
+                        last_conf_1 = s;
+                        min_cost = cost;
+                        if(res_stack.size()>i){
+                            res_stack.pop();
+                            res_stack.push(s);
+                        }
+                        else{
+                            res_stack.push(s);
+                        }
+                    }
+                }
+
+            }
+
+
+        }
+
+
+
+        return res_stack;
+    }
+//
+//    public List<MyEntry<Integer, Map<String, Integer>>> WFA2(int[][] D, List<Integer> r, List<Integer> C0) {
+//        int[] a = new int[D.length];
+//
+//        int cost = 0;
+//
+//        for (int i = 0; i < D.length; i++) {
+//            a[i] = i + 1;
+//        }
+//        permutation(a, 0, 0, C0.size(), C0.size(), a.length, C0.size());
+//        /*
+//            compute distance between initial vertex set and every possible set.
+//         */
+//        Map<String, Integer> dist = new HashMap<>();
+//        for (int[] vertices :
+//                set) {
+////            fullSort(vertices, 0, vertices.length - 1);
+//            int distance = computeDis(vertices, C0, D);
+//            Arrays.sort(vertices);
+//            dist.put(toString(vertices), distance);
+//        }
+//        /*
+//            compute the matrix of work funciton algo
+//         */
+//        List<MyEntry<Integer, Map<String, Integer>>> matrix = new LinkedList<>();
+//        MyEntry<Integer, Map<String, Integer>> entry = new MyEntry<>(0, dist);
+//        matrix.add(entry);
+//        dist = new HashMap<>();
+//        int last = 0;
+//        for (int request :
+//                r) {
+//            for (int[] combo :
+//                    set) {
+//                Arrays.sort(combo);
+//                dist.put(toString(combo), workFunciton( ((LinkedList<MyEntry<Integer, Map<String, Integer>>>) matrix).getLast().getValue(), request, combo, D));
+//            }
+//            int conf_n_1 = Integer.MAX_VALUE;
+//            for(String conf: dist.keySet()){
+//                List<String> possible_conf = computepossiblelastconf(conf,Integer.toString(request));
+//
+//
+//                System.out.println();
+//
+//
+//
+//            }
+//
+//            entry = new MyEntry<>(request, dist);
+//            matrix.add(entry);
+//            dist = new HashMap<>();
+//        }
+//        return matrix;
+//    }
+
+
+    public Map<String,Integer> computepossiblelastconf(String conf_n, String request, int D[][]){
+
+        Map<String,Integer> res = new HashMap<>();
+        String origin_conf = conf_n;
+        String[] array = conf_n.split(",");
+
+        for(int i =0;i<array.length;i++){
+            if(array[i].equals(request)){
+
+                res = new HashMap<>();
+                res.put(conf_n,0);
+                return res;
+            }
+            String[] tmp = array.clone();
+            tmp[i] = request;
+            Arrays.sort(tmp);
+            String new_conf = "";
+            new_conf = toString(tmp);
+            res.put(new_conf, D[Integer.parseInt(request)-1][Integer.parseInt(array[i])-1]);
+
+
+
+
+
+        }
+
+        return res;
+
+
+
+
+    }
+
+
+    public List<MyEntry> WFA(int[][] D, List<Integer> r, List<Integer> C0) {
+        int[] a = new int[D.length];
+        for (int i = 0; i < D.length; i++) {
+            a[i] = i + 1;
+        }
+        permutation(a, 0, 0, C0.size(), C0.size(), a.length, C0.size());
+        /*
+            compute distance between initial vertex set and every possible set.
+         */
+        Map<String, Integer> dist = new HashMap<>();
+
+
+        List<MyEntry> res = new ArrayList<>();
+
+
+
+
+
+        for (int[] vertices :
+                set) {
+//            fullSort(vertices, 0, vertices.length - 1);
+            int distance = computeDis(vertices, C0, D);
+            Arrays.sort(vertices);
+            dist.put(toString(vertices), distance);
+        }
+        int minDis = Integer.MAX_VALUE;
+
+        for(int dis :dist.values()){
+            if(dis<minDis)
+                minDis = dis;
+
+        }
+        int[] lastConf = new int[C0.size()];
+        String lastConfStr = "";
+        for( String choice:dist.keySet()){
+            if(dist.get(choice).equals(minDis)){
+                lastConfStr = choice;
+                break;
+            }
+        }
+
+
+
+        lastConf = toArray(lastConfStr);
+        res.add(new MyEntry(lastConfStr,minDis));
+        List<Integer> lastConfList = new ArrayList<>();
+        for(int i=0;i<lastConf.length;i++){
+            lastConfList.add(lastConf[i]);
+        }
+
+
+
+        for(Integer req:r){
+            dist.clear();
+            Set<int[]> subSet = permutation1(a, 0, 0, lastConf.length, lastConf.length, a.length, lastConf.length,req);
+            for (int[] vertices :
+                    subSet) {
+//            fullSort(vertices, 0, vertices.length - 1);
+                int distance = computeDis(vertices, lastConfList, D);
+                Arrays.sort(vertices);
+                dist.put(toString(vertices), distance);
+            }
+            minDis = Integer.MAX_VALUE;
+
+            for(int dis :dist.values()){
+                if(dis<minDis)
+                    minDis = dis;
+
+            }
+            lastConf = new int[lastConf.length];
+            lastConfStr = "";
+            for( String choice:dist.keySet()){
+                if(dist.get(choice).equals(minDis)){
+                    lastConfStr = choice;
+                    break;
+                }
+            }
+            lastConf = toArray(lastConfStr);
+
+            res.add(new MyEntry(lastConfStr,minDis));
+            lastConfList = new ArrayList<>();
+            for(int i=0;i<lastConf.length;i++){
+                lastConfList.add(lastConf[i]);
+            }
+
+        }
+
+
+    return res;
+
+    }
+
+    public int[] toArray(String conf){
+
+        String[] chars = conf.split(",");
+        int[] res = new int [chars.length];
+        for(int i =0;i<chars.length;i++){
+            res[i] = Integer.parseInt(chars[i]);
+        }
+        return res;
+    }
+
+
+
+
 
     public int workFunciton(Map<String, Integer> matrix, int r, int[] combo, int[][] D) {
         Combo c = new Combo(combo);
@@ -224,6 +628,41 @@ public class Comparison {
         return min;
     }
 
+    public List<int[]>  fullSort(int[] arr, int start, int end) {
+        List<int[]> res = new ArrayList<>();
+        // 递归终止条件
+        if (start == end) {
+
+            res.add(arr.clone());
+
+            return res;
+        }
+        for (int i = start; i <= end; i++) {
+            swap(arr, i, start);
+            res.addAll(fullSort(arr, start + 1, end));
+            swap(arr, i, start);
+        }
+        return res;
+    }
+
+    private static void swap(int[] arr, int i, int j) {
+        int tmp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = tmp;
+    }
+
+    public Set<int[]> GenerateAllCandidatesConf(int r, int[][] D, int k){
+        Set<int[]> res = new HashSet<>();
+
+
+
+
+        return res;
+
+
+
+    }
+
     /*
         Cus there are some key like "34" or "43". They are same clique.
         But we only store one of the combinations into matrix. it's allowed to get both of the combinations from matrix though.
@@ -249,47 +688,73 @@ public class Comparison {
         StringBuilder builder = new StringBuilder();
         for (int a :
                 arr) {
-            builder.append(a);
+            builder.append(a+",");
         }
-        return builder.toString();
+        String res = builder.toString();
+        res = res.substring(0,res.length()-1);
+        return res;
     }
 
+    public String toString(String[] arr) {
+        StringBuilder builder = new StringBuilder();
+        for (String a :
+                arr) {
+            builder.append(a+",");
+        }
+        String res = builder.toString();
+        res = res.substring(0,res.length()-1);
+        return res;
+    }
+
+
+
+
     public int computeDis(int[] vertices, List<Integer> C0, int[][] D) {
-        Set<Integer> s = new HashSet<>();
-        Set<Integer> v = new HashSet<>();
+        List<Integer> s = new ArrayList<>();
+        List<Integer> v = new ArrayList<>();
         /*
             <origin server name, sorted list<origin server name, dist>>
          */
         HashMap<Integer, List<Map.Entry<Integer, Integer>>> dist = new HashMap<>();
-        for (int num :
+        for (Integer num :
                 C0) {
             s.add(num);
         }
-        for (int num :
+        for (Integer num :
                 vertices) {
             if (C0.contains(num)) {
+
                 s.remove(num);
             } else {
                 v.add(num);
             }
         }
-        /*
-            Compute the shortest distance.
-         */
-        for (int vetex :
-                v) {
-            /*
-                <position that origin server exchange, distance>
-             */
-            List<Map.Entry<Integer, Integer>> list = buildSortedList(s, D[vetex-1]);
-            updateMap(dist, list);
+        if(v.size() ==0)
+            return 0;
+
+        //s C0 remove redun
+        int[] temp = new int[v.size()];
+        for(int i =0;i<v.size();i++){
+            temp[i] = v.get(i);
         }
-        int sum = 0;
-        for (List<Map.Entry<Integer, Integer>> list :
-                dist.values()) {
-            sum += list.get(0).getValue();
+
+        int minDistance = Integer.MAX_VALUE;
+
+        List<int[]> candidatesConfig = new ArrayList<>();
+        candidatesConfig = fullSort(temp,0,temp.length-1);
+
+        for(int[] can :candidatesConfig){
+            // calculate C0 to each candidate distance
+            int dis = 0;
+            for(int i = 0;i<s.size();i++){
+                int t = D[can[i]-1][s.get(i)-1];
+                dis = dis + t;
+            }
+            if (dis <minDistance)
+                minDistance = dis;
         }
-        return sum;
+        return minDistance;
+
     }
 
     public void updateMap(HashMap<Integer, List<Map.Entry<Integer, Integer>>> dist, List<Map.Entry<Integer, Integer>> list) {
@@ -325,6 +790,7 @@ public class Comparison {
 
         int[] temp = new int[selectNum];
         System.arraycopy(a, begin0, temp, 0, selectNum);
+        Arrays.sort(temp);
         set.add(temp);
 
         for (int t = begin; t < mid1; t++) {
@@ -340,5 +806,43 @@ public class Comparison {
             }
         }
     }
+
+    public Set<int[]> permutation1(int[] a, int begin0, int begin, int mid1, int mid2, int end, int selectNum, int r) {
+
+        Set<int[]> res = new HashSet<>();
+
+        int[] temp = new int[selectNum];
+        System.arraycopy(a, begin0, temp, 0, selectNum);
+        boolean canInsert = false;
+        for(int i:temp){
+            if(i == r){
+                canInsert = true;
+                break;
+            }
+        }
+        if(canInsert){
+            Arrays.sort(temp);
+            res.add(temp);
+
+        }
+
+
+        for (int t = begin; t < mid1; t++) {
+            for (int j = mid2; j < end; j++) {
+                int temp0 = a[t];
+                a[t] = a[j];
+                a[j] = temp0;
+
+                res.addAll(permutation1(a, begin0, t + 1, mid1, j + 1, end, selectNum, r));
+
+                a[j] = a[t];
+                a[t] = temp0;
+            }
+        }
+
+        return res;
+    }
+
+
 
 }

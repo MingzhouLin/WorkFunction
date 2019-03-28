@@ -32,14 +32,27 @@ public class Combo {
     }
 
 
+//    public String toString() {
+//        StringBuilder builder = new StringBuilder();
+//        for (int a :
+//                combo) {
+//            builder.append(a);
+//        }
+//        return builder.toString();
+//    }
+
     public String toString() {
         StringBuilder builder = new StringBuilder();
         for (int a :
                 combo) {
-            builder.append(a);
+            builder.append(a+",");
         }
-        return builder.toString();
+        String res = builder.toString();
+        res = res.substring(0,res.length()-1);
+        return res;
     }
+
+
 
     public int[] getCombo() {
         return combo;
