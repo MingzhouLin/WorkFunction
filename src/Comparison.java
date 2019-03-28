@@ -12,9 +12,9 @@ public class Comparison {
     public static void main(String[] args) {
         Comparison comparison = new Comparison();
         int[][] D = comparison.computeDistanceFromFile();
-        Integer[] a = new Integer[] {3, 4, 2, 3, 1};
+        Integer[] a = new Integer[] {1, 2, 6, 8,10};
         List<Integer> r = Arrays.asList(a);
-        a = new Integer[] {1, 2};
+        a = new Integer[] {1, 2,3,4};
         List<Integer> C0 = Arrays.asList(a);
         List<MyEntry> wfa = new ArrayList<>();
 
@@ -28,6 +28,15 @@ public class Comparison {
         //opt
         List<MyEntry<Integer, Map<String, Integer>>> opt = comparison.OPT(D, r, C0);
         MyEntry lastRound = opt.get(opt.size()-1);
+
+        MyEntry test = opt.get(2);
+        Map<String, Integer> map1 = (Map)test.getValue();
+        System.out.println(map1.get("1,2,3,4"));
+
+
+
+
+
         Map<String, Integer> map = (Map)lastRound.getValue();
         int costOfOPT = Integer.MAX_VALUE;
         for(String conf:map.keySet()){
@@ -97,10 +106,6 @@ public class Comparison {
             res[1] = Integer.parseInt(s);
         }
 
-
-
-
-
         return res;
     }
 
@@ -115,7 +120,14 @@ public class Comparison {
             String conf2= array[i];
             int[] position = FindDifferent(conf1.split(","),conf2.split(","));
 
-            res = res + D[position[0]-1][position[1]-1];
+
+            if(position[0]==0&&position[1] ==0){
+                continue;
+            }
+            else{
+                res = res + D[position[0]-1][position[1]-1];
+
+            }
 
 
         }
@@ -223,13 +235,13 @@ public class Comparison {
             D = Dijkstra(graph, D, i);
         }
 
-        int[][] test = {{0,1,2,4},
-                        {1,0,2,3},
-                        {2,2,0,3},
-                        {4,3,3,0}};
-        return test;
+//        int[][] test = {{0,1,2,4},
+//                        {1,0,2,3},
+//                        {2,2,0,3},
+//                        {4,3,3,0}};
+//        return test;
 
-//        return D;
+        return D;
     }
 
     public List<int[]> Greedy(int[][] D, List<Integer> r, List<Integer> C0) {
@@ -310,6 +322,9 @@ public class Comparison {
             for (int[] combo :
                     set) {
                 Arrays.sort(combo);
+                if(toString(combo).equals("2,3,4,6")){
+                    System.out.println("sss");
+                }
                 dist.put(toString(combo), workFunciton( ((LinkedList<MyEntry<Integer, Map<String, Integer>>>) matrix).getLast().getValue(), request, combo, D));
             }
             entry = new MyEntry<>(request, dist);
@@ -454,8 +469,13 @@ public class Comparison {
                 res.put(conf_n,0);
                 return res;
             }
-            String[] tmp = array.clone();
-            tmp[i] = request;
+            int[] tmp = new int[array.length];
+
+            for(int j =0; j<tmp.length;j++){
+                tmp[j] = Integer.parseInt(array[j]);
+            }
+
+            tmp[i] = Integer.parseInt(request);
             Arrays.sort(tmp);
             String new_conf = "";
             new_conf = toString(tmp);
@@ -495,7 +515,7 @@ public class Comparison {
         if (c.contains(r)) {
             min = matrix.get(c.toString());
             for (int i = 0; i < combo.length; i++) {
-                if (combo[i] == r) continue;
+//                if (combo[i] == r) continue;
                 temp = new Combo(combo);
                 for (int j = 0; j < D.length; j++) {
                     if (c.contains(j + 1)) {
@@ -568,6 +588,23 @@ public class Comparison {
         But we only store one of the combinations into matrix. it's allowed to get both of the combinations from matrix though.
      */
     public int roughlyGet(Map<String, Integer> map, String s){
+
+        String[] temp = s.split(",");
+        int[] int_arry = new int[temp.length];
+
+        for(int i =0;i<temp.length;i++){
+            int_arry[i] = Integer.parseInt(temp[i]);
+        }
+
+        Arrays.sort(int_arry);
+
+        String search = toString(int_arry);
+        return map.get(search);
+
+    }
+
+
+    public int roughlyGet1(Map<String, Integer> map, String s){
         for (Map.Entry<String, Integer> entry:
                 map.entrySet()){
             Set<String> key = new HashSet<String>(Arrays.asList(entry.getKey().split("")));
