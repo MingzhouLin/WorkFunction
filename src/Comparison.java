@@ -10,14 +10,27 @@ public class Comparison {
     Set<int[]> set = new HashSet<>();
 
     public static void main(String[] args) {
-        Comparison comparison = new Comparison();
-        int[][] D = comparison.computeDistanceFromFile();
-        Integer[] a = new Integer[] {1, 2, 6, 8,10};
-        List<Integer> r = Arrays.asList(a);
-        a = new Integer[] {1, 2,3,4};
-        List<Integer> C0 = Arrays.asList(a);
-        List<MyEntry> wfa = new ArrayList<>();
+        Scanner scan = new Scanner(System.in);
+        System.out.println("Please choose mode: 1. Read from file  2. Random Graph");
 
+        String mode = scan.nextLine();
+        mode = mode.trim();
+        Comparison comparison = new Comparison();
+        int[][] D = comparison.computeDistanceFromFile(mode);
+        Integer[] a = new Integer[] {1,2,6,8,10};
+        List<Integer> r = new ArrayList<>();
+        if( mode.equals("1")){
+            r = Arrays.asList(a);
+        }
+        else{
+
+            System.out.println("Please choose number of requests:");
+            int num = Integer.parseInt(scan.nextLine().trim());
+            r = RandomRequest(D[0].length,num);
+        }
+         // request list
+        a = new Integer[] {1,2,3,4};
+        List<Integer> C0 = Arrays.asList(a);//C0
         System.out.println("Distance matrix:");
         for (int i = 0; i < D.length; i++) {
             for (int j = 0; j < D[i].length; j++) {
@@ -31,12 +44,6 @@ public class Comparison {
 
         MyEntry test = opt.get(2);
         Map<String, Integer> map1 = (Map)test.getValue();
-        System.out.println(map1.get("1,2,3,4"));
-
-
-
-
-
         Map<String, Integer> map = (Map)lastRound.getValue();
         int costOfOPT = Integer.MAX_VALUE;
         for(String conf:map.keySet()){
@@ -50,12 +57,6 @@ public class Comparison {
         int costOfWFA = comparison.computeTotalCost(wfa_stack,D);
         System.out.println("WFA result: "+costOfWFA);
 
-
-
-
-
-
-
         //greedy
         List<int[]> greedy = comparison.Greedy(D,r,C0);
         int costOfGreedy =0;
@@ -63,13 +64,6 @@ public class Comparison {
             costOfGreedy = costOfGreedy + greedy.get(j)[1];
         }
         System.out.println("Greedy result: "+costOfGreedy);
-
-
-
-
-
-
-
 
     }
 
@@ -134,6 +128,42 @@ public class Comparison {
         return  res;
 
     }
+
+    public static Graph RandomGraph(int n, double p){
+        Graph graph = new Graph();
+
+        for (int i=1;i<=n;i++){
+            Node node = new Node(i);
+            graph.getMap().put(i,node);
+        }
+        for (int i =1; i<= n-1;i++){
+            for (int j =i+1;j<=n;j++){
+                double random = Math.random();
+                if(random >= p){
+                    Node node1 = graph.getMap().get(i);
+                    Node node2 = graph.getMap().get(j);
+                    node1.getNeighbor().add(node2);
+                    node2.getNeighbor().add(node1);
+
+                }
+            }
+        }
+        return graph;
+    }
+
+    public static List<Integer> RandomRequest(int n, int num){
+        List<Integer> requests = new ArrayList<>();
+        for(int i=0;i<num;i++){
+            Integer request = 1 + (int)(Math.random() * (n));
+            requests.add(request);
+
+        }
+
+        return  requests;
+
+
+    }
+
 
 
     public Graph readFileAndProcess() {
@@ -220,8 +250,24 @@ public class Comparison {
         return min_id;
     }
 
-    public int[][] computeDistanceFromFile() {
-        Graph graph = readFileAndProcess();
+
+
+    public int[][] computeDistanceFromFile(String mode) {
+        Graph graph = new Graph();
+        if(mode.equals("1")){
+            graph = readFileAndProcess();
+        }
+        else{
+            Scanner scan = new Scanner(System.in);
+
+            System.out.println("Please choose n:");
+            int n = Integer.parseInt(scan.nextLine().trim());
+            System.out.println("Please choose p:");
+            double p = Double.parseDouble(scan.nextLine().trim());
+
+            graph = RandomGraph(n,p);
+        }
+
 
 
         int[][] D = new int[graph.getMap().size()][graph.getMap().size()];
@@ -322,9 +368,7 @@ public class Comparison {
             for (int[] combo :
                     set) {
                 Arrays.sort(combo);
-                if(toString(combo).equals("2,3,4,6")){
-                    System.out.println("sss");
-                }
+
                 dist.put(toString(combo), workFunciton( ((LinkedList<MyEntry<Integer, Map<String, Integer>>>) matrix).getLast().getValue(), request, combo, D));
             }
             entry = new MyEntry<>(request, dist);
