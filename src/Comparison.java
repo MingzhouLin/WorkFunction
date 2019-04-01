@@ -3,13 +3,15 @@ import graph.Graph;
 import graph.Node;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class Comparison {
     Set<int[]> set = new HashSet<>();
+    public Graph graph = new Graph();
+
 
     public static void main(String[] args) {
+
         Scanner scan = new Scanner(System.in);
         System.out.println("Please choose mode: 1. Read from file  2. Random Graph");
 
@@ -19,15 +21,26 @@ public class Comparison {
         int[][] D = comparison.computeDistanceFromFile(mode);
         Integer[] a = new Integer[] {1,2,6,8,10};
         List<Integer> r = new ArrayList<>();
+
+        System.out.println("Please choose request mode: 1. Normal 2. Random Uniform 3. Markov chain");
+
+        mode = scan.nextLine();
         if( mode.equals("1")){
             r = Arrays.asList(a);
         }
-        else{
+        else if( mode.equals("2")){
 
             System.out.println("Please choose number of requests:");
             int num = Integer.parseInt(scan.nextLine().trim());
             r = RandomRequest(D[0].length,num);
         }
+        else{
+
+            System.out.println("Please choose number of requests:");
+            int num = Integer.parseInt(scan.nextLine().trim());
+            r = MarkovRequest(D[0].length,num,comparison.graph);
+        }
+
          // request list
         a = new Integer[] {1,2,3,4};
         List<Integer> C0 = Arrays.asList(a);//C0
@@ -148,6 +161,7 @@ public class Comparison {
                 }
             }
         }
+
         return graph;
     }
 
@@ -163,6 +177,38 @@ public class Comparison {
 
 
     }
+
+    public static List<Integer> MarkovRequest(int n, int num, Graph graph){
+        List<Integer> requests = new ArrayList<>();
+        Integer lastRequest =-1;
+
+        Integer request = 1 + (int)(Math.random() * (n));
+        requests.add(request);
+        lastRequest = request;
+        for(int i=1;i<num;i++){
+
+            Node node = graph.getMap().get(lastRequest);
+            int degree = node.getNeighbor().size();
+            int random = (int)(Math.random() * (degree+1));
+            if(random == 0){
+                request = lastRequest;
+            }
+            else{
+
+                request = node.getNeighbor().get(random-1).getId();
+            }
+            requests.add(request);
+            lastRequest = request;
+
+        }
+
+        return  requests;
+
+
+    }
+
+
+
 
 
 
@@ -256,6 +302,7 @@ public class Comparison {
         Graph graph = new Graph();
         if(mode.equals("1")){
             graph = readFileAndProcess();
+            this.graph = graph;
         }
         else{
             Scanner scan = new Scanner(System.in);
@@ -266,6 +313,7 @@ public class Comparison {
             double p = Double.parseDouble(scan.nextLine().trim());
 
             graph = RandomGraph(n,p);
+            this.graph = graph;
         }
 
 
