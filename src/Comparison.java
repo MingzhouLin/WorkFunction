@@ -212,8 +212,8 @@ public class Comparison {
 
 
 
-    public Graph readFileAndProcess() {
-        File file = new File("test.txt");
+    public Graph readFileAndProcess(String path) {
+        File file = new File(path);
         Graph graph = new Graph();
         try {
             BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -300,12 +300,43 @@ public class Comparison {
 
     public int[][] computeDistanceFromFile(String mode) {
         Graph graph = new Graph();
+        Scanner scan = new Scanner(System.in);
         if(mode.equals("1")){
-            graph = readFileAndProcess();
+            System.out.println("Please choose the graph file:");
+            System.out.println("1) klein-b1  30 nodes, 60 edges\n" +
+                    "2) Ragusa18  23 nodes, 64 edges\n" +
+                    "3) n3c4-b3   20 nodes, 60 edges\n" +
+                    "4) lap_25    25 nodes, 97 edges\n" +
+                    "5) football  35 nodes, 118 edges");
+            String choose = scan.nextLine().trim();
+            String path = "";
+            switch(choose){
+                case "1":
+                    path = "klein-b1.txt";
+                    break;
+                case"2":
+                    path = "Ragusa18.txt";
+                    break;
+                case"3":
+                    path = "n3c4-b3.txt";
+                    break;
+                case"4":
+                    path = "lap_25.txt";
+                    break;
+                default:
+                    path = "football.txt";
+                    break;
+
+            }
+
+
+
+
+            graph = readFileAndProcess(path);
             this.graph = graph;
         }
         else{
-            Scanner scan = new Scanner(System.in);
+
 
             System.out.println("Please choose n:");
             int n = Integer.parseInt(scan.nextLine().trim());
@@ -359,9 +390,6 @@ public class Comparison {
                 }
             }
             res.add(temp);
-
-
-
         }
         return res;
     }
