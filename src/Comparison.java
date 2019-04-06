@@ -1,4 +1,5 @@
 
+
 import graph.Graph;
 import graph.Node;
 
@@ -22,11 +23,12 @@ public class Comparison {
         Integer[] a = new Integer[] {1,2,6,8,10};
         List<Integer> r = new ArrayList<>();
 
-        System.out.println("Please choose request mode: 1. Normal 2. Random Uniform 3. Markov chain");
+        System.out.println("Please choose request mode: 1. Fixed Requests 2. Random Uniform 3. Markov chain");
 
         mode = scan.nextLine();
         if( mode.equals("1")){
             r = Arrays.asList(a);
+            System.out.println("The requests will be 1 2 6 8 10");
         }
         else if( mode.equals("2")){
 
@@ -41,15 +43,33 @@ public class Comparison {
             r = MarkovRequest(D[0].length,num,comparison.graph);
         }
 
+        System.out.println("Please choose initial configuration mode: 1. Fixed  2. Random");
+        String conf_mode= scan.nextLine().trim();
+
+
          // request list
-        a = new Integer[] {1,2,3,4};
+        if(conf_mode.equals("1"))
+            a = new Integer[] {1,2,3,4};
+        else{
+            a = RandomConf(D[0].length);
+        }
+        Arrays.sort(a);
+        System.out.println("The initial configuration is:"+a[0] +" "+a[1]+" "+ a[2]+" "+a[3]);
         List<Integer> C0 = Arrays.asList(a);//C0
         System.out.println("Distance matrix:");
+        boolean unreached = false;
         for (int i = 0; i < D.length; i++) {
             for (int j = 0; j < D[i].length; j++) {
+                if(D[i][j] == 32765)
+                    unreached = true;
                 System.out.print(D[i][j] + " ");
             }
             System.out.println();
+        }
+        if(unreached){
+            System.out.println("The graph contains unreached node. Related request cannot feed.");
+            System.out.println("Please run the program again.");
+            System.exit(0);
         }
         //opt
         List<MyEntry<Integer, Map<String, Integer>>> opt = comparison.OPT(D, r, C0);
@@ -152,7 +172,7 @@ public class Comparison {
         for (int i =1; i<= n-1;i++){
             for (int j =i+1;j<=n;j++){
                 double random = Math.random();
-                if(random >= p){
+                if(random <= p){
                     Node node1 = graph.getMap().get(i);
                     Node node2 = graph.getMap().get(j);
                     node1.getNeighbor().add(node2);
@@ -165,6 +185,32 @@ public class Comparison {
         return graph;
     }
 
+
+    public static Integer[] RandomConf(int n){
+        Integer[] conf = {0,0,0,0};
+        for(int i=0;i<4;i++){
+            int request = 1 + (int)(Math.random() * (n));
+
+
+            boolean hasThisNode =false;
+            for(int j = 0;j<4;j++){
+                if(request == conf[j]){
+                    hasThisNode = true;
+                    break;
+                }
+            }
+            if(!hasThisNode)
+                conf[i] = new Integer(request);
+            else{
+                i--;
+            }
+
+        }
+
+
+        return conf;
+
+    }
     public static List<Integer> RandomRequest(int n, int num){
         List<Integer> requests = new ArrayList<>();
         for(int i=0;i<num;i++){

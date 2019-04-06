@@ -1,5 +1,6 @@
 
 .idea/
+*.class
 WorkFunction.iml
 out/
 road-euroroad.edges
